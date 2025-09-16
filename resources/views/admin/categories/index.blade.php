@@ -3,412 +3,144 @@
 @section('page-title', 'Categories Management')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0">
-        <i class="bi bi-tags me-2"></i>Categories & Sub Categories
-    </h4>
-    <div>
-        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#quickAddCategoryModal">
-            <i class="bi bi-plus-lg me-2"></i>Add Category
-        </button>
-        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#quickAddSubCategoryModal">
-            <i class="bi bi-plus-lg me-2"></i>Add Subcategory
-        </button>
+<div x-data="{
+    deleteModalOpen: false,
+    deleteTargetId: null,
+    deleteTargetName: '',
+    deleteTargetType: '',
+    addCategoryModalOpen: false,
+    addSubCategoryModalOpen: false
+}">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-semibold text-gray-800">Categories & Subcategories</h1>
+        <div class="flex space-x-2">
+            <a href="{{ route('admin.categories.create') }}" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                + Add Category
+            </a>
+        </div>
     </div>
-</div>
 
-<div class="card">
-    <div class="card-body">
-        @if($categories->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Parent</th>
-                            <th>Products Count</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th width="150">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($categories as $category)
-                        <!-- Main Category Row -->
-                        <tr class="category-row">
-                            <td>
-                                @if($category->image)
-                                    <img src="{{ asset('storage/' . $category->image) }}" 
-                                         alt="{{ $category->name }}" 
-                                         class="img-thumbnail" 
-                                         style="width: 60px; height: 60px; object-fit: cover;">
-                                @else
-                                    <div class="bg-light d-flex align-items-center justify-content-center" 
-                                         style="width: 60px; height: 60px; border-radius: 4px;">
-                                        <i class="bi bi-image text-muted"></i>
-                                    </div>
-                                @endif
-                            </td>
-                            <td>
-                                <strong>{{ $category->name }}</strong>
-                                @if($category->subcategories && $category->subcategories->count() > 0)
-                                    <br><small class="text-primary">
-                                        <i class="bi bi-arrow-down-short"></i>{{ $category->subcategories->count() }} Sub Categories
-                                    </small>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="badge bg-primary">Main Category</span>
-                            </td>
-                            <td>-</td>
-                            <td>
-                                <span class="badge bg-info">{{ $category->products_count }} Products</span>
-                            </td>
-                            <td>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input status-toggle" 
-                                           type="checkbox" 
-                                           data-id="{{ $category->id }}"
-                                           data-type="category"
-                                           {{ $category->status ? 'checked' : '' }}>
-                                    <label class="form-check-label">
-                                        {{ $category->status ? 'Active' : 'Inactive' }}
-                                    </label>
+    <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+        <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3">Type</th>
+                    <th scope="col" class="px-6 py-3">Parent</th>
+                    <th scope="col" class="px-6 py-3 text-center">Products</th>
+                    <th scope="col" class="px-6 py-3 text-center">Status</th>
+                    <th scope="col" class="px-6 py-3 text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($categories as $category)
+                <tr class="bg-white border-t">
+                    <td class="px-6 py-4 font-bold text-gray-900">
+                        <div class="flex items-center">
+                            @if($category->image)
+                                <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" class="w-10 h-10 rounded-md object-cover mr-4">
+                            @else
+                                <div class="w-10 h-10 rounded-md bg-gray-200 mr-4 flex items-center justify-center text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg>
                                 </div>
-                            </td>
-                            <td>
-                                <small class="text-muted">
-                                    {{ $category->created_at->format('M d, Y') }}
-                                </small>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('admin.categories.show', $category) }}" 
-                                       class="btn btn-outline-info" 
-                                       title="View">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.categories.edit', $category) }}" 
-                                       class="btn btn-outline-primary" 
-                                       title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" 
-                                            class="btn btn-outline-danger delete-category" 
-                                            data-id="{{ $category->id }}"
-                                            data-name="{{ $category->name }}"
-                                            title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Sub Categories Rows -->
-                        @foreach($category->subcategories as $subCategory)
-                        <tr class="subcategory-row">
-                            <td>
+                            @endif
+                            <span>{{ $category->name }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">Main Category</span></td>
+                    <td class="px-6 py-4">-</td>
+                    <td class="px-6 py-4 text-center">{{ $category->products_count }}</td>
+                    <td class="px-6 py-4 text-center">
+                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $category->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ $category->status ? 'Active' : 'Inactive' }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <a href="{{ route('admin.categories.edit', $category->id) }}" class="px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600">Edit</a>
+                            <button @click="deleteTargetId = {{ $category->id }}; deleteTargetName = '{{ $category->name }}'; deleteTargetType = 'category'; deleteModalOpen = true" class="px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+                    @foreach($category->subcategories as $subCategory)
+                    <tr class="bg-gray-50 border-t">
+                        <td class="pl-12 pr-6 py-3 text-gray-800">
+                            <div class="flex items-center">
+                                <span class="mr-2 text-gray-400">&#9492;</span>
                                 @if($subCategory->image)
-                                    <img src="{{ asset('storage/' . $subCategory->image) }}" 
-                                         alt="{{ $subCategory->name }}" 
-                                         class="img-thumbnail" 
-                                         style="width: 50px; height: 50px; object-fit: cover;">
-                                @else
-                                    <div class="bg-light d-flex align-items-center justify-content-center" 
-                                         style="width: 50px; height: 50px; border-radius: 4px;">
-                                        <i class="bi bi-image text-muted" style="font-size: 0.8rem;"></i>
-                                    </div>
+                                     <img src="{{ asset('storage/' . $subCategory->image) }}" alt="{{ $subCategory->name }}" class="w-8 h-8 rounded-md object-cover mr-3">
                                 @endif
-                            </td>
-                            <td style="padding-left: 2rem;">
-                                <i class="bi bi-arrow-right text-muted me-1"></i>
-                                <strong>{{ $subCategory->name }}</strong>
-                            </td>
-                            <td>
-                                <span class="badge bg-secondary">Sub Category</span>
-                            </td>
-                            <td>
-                                <small class="text-muted">{{ $category->name }}</small>
-                            </td>
-                            <td>
-                                <span class="badge bg-info">{{ $subCategory->products_count }} Products</span>
-                            </td>
-                            <td>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input status-toggle" 
-                                           type="checkbox" 
-                                           data-id="{{ $subCategory->id }}"
-                                           data-type="subcategory"
-                                           {{ $subCategory->status ? 'checked' : '' }}>
-                                    <label class="form-check-label">
-                                        {{ $subCategory->status ? 'Active' : 'Inactive' }}
-                                    </label>
-                                </div>
-                            </td>
-                            <td>
-                                <small class="text-muted">
-                                    {{ $subCategory->created_at->format('M d, Y') }}
-                                </small>
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('admin.subcategories.show', $subCategory) }}" 
-                                       class="btn btn-outline-info" 
-                                       title="View">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.subcategories.edit', $subCategory) }}" 
-                                       class="btn btn-outline-primary" 
-                                       title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" 
-                                            class="btn btn-outline-danger delete-subcategory" 
-                                            data-id="{{ $subCategory->id }}"
-                                            data-name="{{ $subCategory->name }}"
-                                            title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <div class="d-flex justify-content-center mt-4">
-                {{ $categories->links() }}
-            </div>
-        @else
-            <div class="text-center py-5">
-                <i class="bi bi-tags text-muted" style="font-size: 4rem;"></i>
-                <h4 class="mt-3 text-muted">No Categories Found</h4>
-                <p class="text-muted">Start by creating your first category</p>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickAddCategoryModal">
-                    <i class="bi bi-plus-lg me-2"></i>Create First Category
-                </button>
-            </div>
-        @endif
+                                <span>{{ $subCategory->name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-3"><span class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded-full">Subcategory</span></td>
+                        <td class="px-6 py-3 text-sm text-gray-600">{{ $category->name }}</td>
+                        <td class="px-6 py-3 text-center">{{ $subCategory->products_count }}</td>
+                        <td class="px-6 py-3 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $subCategory->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                {{ $subCategory->status ? 'Active' : 'Inactive' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                             <div class="flex items-center justify-center space-x-2">
+                                <a href="{{ route('admin.subcategories.edit', $subCategory->id) }}" class="px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600">Edit</a>
+                                <button @click="deleteTargetId = {{ $subCategory->id }}; deleteTargetName = '{{ $subCategory->name }}'; deleteTargetType = 'subcategory'; deleteModalOpen = true" class="px-3 py-1 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                @empty
+                <tr>
+                    <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                        No categories found.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
-</div>
 
-<!-- Delete Category Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the category "<strong id="categoryName"></strong>"?</p>
-                <p class="text-danger"><small><i class="bi bi-exclamation-triangle"></i> This action cannot be undone.</small></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
+    <div class="mt-4">
+        {{ $categories->links() }}
     </div>
-</div>
 
-<!-- Delete Sub Category Modal -->
-<div class="modal fade" id="deleteSubCategoryModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Delete Sub Category</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the sub category "<strong id="subCategoryName"></strong>"?</p>
-                <p class="text-danger"><small><i class="bi bi-exclamation-triangle"></i> This action cannot be undone.</small></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteSubCategoryForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Category Modal -->
-<div class="modal fade" id="quickAddCategoryModal" tabindex="-1" aria-labelledby="quickAddCategoryLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="quickAddCategoryLabel">
-                    <i class="bi bi-plus-lg me-2"></i>Add New Category
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('admin.categories.store') }}" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Category Name *</label>
-                        <input type="text" name="name" class="form-control" required placeholder="e.g. Electronics, Fashion">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Category Image</label>
-                        <input type="file" name="image" class="form-control" accept="image/*">
-                        <small class="text-muted">Upload an image for this category</small>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="status" id="catStatus" checked>
-                        <label class="form-check-label" for="catStatus">Active</label>
+    <!-- Delete Modal -->
+    <div x-show="deleteModalOpen" @keydown.escape.window="deleteModalOpen = false" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="deleteModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="deleteModalOpen = false"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div x-show="deleteModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Delete <span x-text="deleteTargetType"></span>
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Are you sure you want to delete "<strong x-text="deleteTargetName"></strong>"? This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-2"></i>Save Category
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <form :action="deleteTargetType === 'category' ? `/admin/categories/${deleteTargetId}` : `/admin/subcategories/${deleteTargetId}`" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Delete
+                        </button>
+                    </form>
+                    <button @click="deleteModalOpen = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                        Cancel
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Add Subcategory Modal -->
-<div class="modal fade" id="quickAddSubCategoryModal" tabindex="-1" aria-labelledby="quickAddSubCategoryLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="quickAddSubCategoryLabel">
-                    <i class="bi bi-plus-lg me-2"></i>Add New Subcategory
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ route('admin.subcategories.store') }}" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Parent Category *</label>
-                        <select name="category_id" class="form-select" required>
-                            <option value="">-- Select Parent Category --</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted">Choose which category this subcategory belongs to</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Subcategory Name *</label>
-                        <input type="text" name="name" class="form-control" required placeholder="e.g. Mobile Phones, T-Shirts">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Subcategory Image (optional)</label>
-                        <input type="file" name="image" class="form-control" accept="image/*">
-                        <small class="text-muted">Upload an image for this subcategory</small>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" name="status" id="subCatStatus" checked>
-                        <label class="form-check-label" for="subCatStatus">Active</label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save me-2"></i>Save Subcategory
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 @endsection
-
-@push('styles')
-<style>
-.subcategory-row {
-    background-color: #f8f9fa;
-}
-.subcategory-row:hover {
-    background-color: #e9ecef;
-}
-.category-row {
-    border-top: 2px solid #dee2e6;
-}
-</style>
-@endpush
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    // Status Toggle for both categories and subcategories
-    $('.status-toggle').change(function() {
-        const id = $(this).data('id');
-        const type = $(this).data('type');
-        const isChecked = $(this).prop('checked');
-        
-        const url = type === 'category' 
-            ? `/admin/categories/${id}/toggle-status`
-            : `/admin/subcategories/${id}/toggle-status`;
-        
-        $.post(url, {
-            _token: '{{ csrf_token() }}'
-        })
-        .done(function(response) {
-            if(response.success) {
-                const label = $(this).siblings('label');
-                label.text(response.status ? 'Active' : 'Inactive');
-                showAlert('success', response.message);
-            }
-        }.bind(this))
-        .fail(function() {
-            $(this).prop('checked', !isChecked);
-            showAlert('error', 'Failed to update status');
-        }.bind(this));
-    });
-    
-    // Delete Category
-    $('.delete-category').click(function() {
-        const categoryId = $(this).data('id');
-        const categoryName = $(this).data('name');
-        $('#categoryName').text(categoryName);
-        $('#deleteForm').attr('action', `/admin/categories/${categoryId}`);
-        $('#deleteModal').modal('show');
-    });
-    
-    // Delete Sub Category
-    $('.delete-subcategory').click(function() {
-        const subCategoryId = $(this).data('id');
-        const subCategoryName = $(this).data('name');
-        $('#subCategoryName').text(subCategoryName);
-        $('#deleteSubCategoryForm').attr('action', `/admin/subcategories/${subCategoryId}`);
-        $('#deleteSubCategoryModal').modal('show');
-    });
-    
-    // Show Alert Function
-    function showAlert(type, message) {
-        const alertHtml = `
-            <div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show" role="alert">
-                <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-        
-        $('.main-content .px-4').prepend(alertHtml);
-        
-        setTimeout(function() {
-            $('.alert').fadeOut();
-        }, 5000);
-    }
-});
-</script>
-@endpush
