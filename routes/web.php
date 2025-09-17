@@ -116,8 +116,11 @@ Route::prefix('customer')->name('customer.')->middleware(['auth', 'role:customer
     Route::get('/addresses/{id}/edit', [CustomerAddressController::class, 'edit'])->name('addresses.edit');
     // Wishlist
     Route::get('/wishlist', [CustomerWishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/add', [CustomerWishlistController::class, 'add'])->name('wishlist.add');
+    Route::delete('/wishlist/remove/{id}', [CustomerWishlistController::class, 'remove'])->name('wishlist.remove');
     // Reviews
     Route::get('/reviews', [CustomerReviewController::class, 'index'])->name('reviews.index');
+    Route::post('/reviews', [CustomerReviewController::class, 'store'])->name('reviews.store');
 });
 
 // ✅ Authenticated User Routes (Any Role)
